@@ -262,10 +262,6 @@ void __attribute__((destructor)) setrans_lib_destructor(void);
 
 void hidden __attribute__((destructor)) setrans_lib_destructor(void)
 {
-	if (!has_setrans)
-		return;
-	if (destructor_key_initialized)
-		__selinux_key_delete(destructor_key);
 }
 
 static inline void init_thread_destructor(void)
@@ -290,41 +286,7 @@ static void init_context_translations(void)
 int selinux_trans_to_raw_context(const char * trans,
 				 char ** rawp)
 {
-	if (!trans) {
-		*rawp = NULL;
-		return 0;
-	}
-
-	__selinux_once(once, init_context_translations);
-	init_thread_destructor();
-
-	if (!has_setrans) {
-		*rawp = strdup(trans);
-		goto out;
-	}
-
-	if (prev_t2r_trans && strcmp(prev_t2r_trans, trans) == 0) {
-		*rawp = strdup(prev_t2r_raw);
-	} else {
-		free(prev_t2r_trans);
-		prev_t2r_trans = NULL;
-		free(prev_t2r_raw);
-		prev_t2r_raw = NULL;
-		if (trans_to_raw_context(trans, rawp))
-			*rawp = strdup(trans);
-		if (*rawp) {
-			prev_t2r_trans = strdup(trans);
-			if (!prev_t2r_trans)
-				goto out;
-			prev_t2r_raw = strdup(*rawp);
-			if (!prev_t2r_raw) {
-				free(prev_t2r_trans);
-				prev_t2r_trans = NULL;
-			}
-		}
-	}
-      out:
-	return *rawp ? 0 : -1;
+        return 0;
 }
 
 hidden_def(selinux_trans_to_raw_context)
@@ -332,82 +294,14 @@ hidden_def(selinux_trans_to_raw_context)
 int selinux_raw_to_trans_context(const char * raw,
 				 char ** transp)
 {
-	if (!raw) {
-		*transp = NULL;
-		return 0;
-	}
-
-	__selinux_once(once, init_context_translations);
-	init_thread_destructor();
-
-	if (!has_setrans)  {
-		*transp = strdup(raw);
-		goto out;
-	}
-
-	if (prev_r2t_raw && strcmp(prev_r2t_raw, raw) == 0) {
-		*transp = strdup(prev_r2t_trans);
-	} else {
-		free(prev_r2t_raw);
-		prev_r2t_raw = NULL;
-		free(prev_r2t_trans);
-		prev_r2t_trans = NULL;
-		if (raw_to_trans_context(raw, transp))
-			*transp = strdup(raw);
-		if (*transp) {
-			prev_r2t_raw = strdup(raw);
-			if (!prev_r2t_raw)
-				goto out;
-			prev_r2t_trans = strdup(*transp);
-			if (!prev_r2t_trans) {
-				free(prev_r2t_raw);
-				prev_r2t_raw = NULL;
-			}
-		}
-	}
-      out:
-	return *transp ? 0 : -1;
+        return 0;
 }
 
 hidden_def(selinux_raw_to_trans_context)
 
 int selinux_raw_context_to_color(const char * raw, char **transp)
 {
-	if (!raw) {
-		*transp = NULL;
-		return -1;
-	}
-
-	__selinux_once(once, init_context_translations);
-	init_thread_destructor();
-
-	if (!has_setrans) {
-		*transp = strdup(raw);
-		goto out;
-	}
-
-	if (prev_r2c_raw && strcmp(prev_r2c_raw, raw) == 0) {
-		*transp = strdup(prev_r2c_trans);
-	} else {
-		free(prev_r2c_raw);
-		prev_r2c_raw = NULL;
-		free(prev_r2c_trans);
-		prev_r2c_trans = NULL;
-		if (raw_context_to_color(raw, transp))
-			return -1;
-		if (*transp) {
-			prev_r2c_raw = strdup(raw);
-			if (!prev_r2c_raw)
-				goto out;
-			prev_r2c_trans = strdup(*transp);
-			if (!prev_r2c_trans) {
-				free(prev_r2c_raw);
-				prev_r2c_raw = NULL;
-			}
-		}
-	}
-      out:
-	return *transp ? 0 : -1;
+        return 0;
 }
 
 hidden_def(selinux_raw_context_to_color)
@@ -416,14 +310,7 @@ hidden_def(selinux_raw_context_to_color)
 int selinux_trans_to_raw_context(const char * trans,
 				 char ** rawp)
 {
-	if (!trans) {
-		*rawp = NULL;
-		return 0;
-	}
-
-	*rawp = strdup(trans);
-	
-	return *rawp ? 0 : -1;
+        return 0;
 }
 
 hidden_def(selinux_trans_to_raw_context)
@@ -431,13 +318,7 @@ hidden_def(selinux_trans_to_raw_context)
 int selinux_raw_to_trans_context(const char * raw,
 				 char ** transp)
 {
-	if (!raw) {
-		*transp = NULL;
-		return 0;
-	}
-	*transp = strdup(raw);
-	
-	return *transp ? 0 : -1;
+	return 0;
 }
 
 hidden_def(selinux_raw_to_trans_context)

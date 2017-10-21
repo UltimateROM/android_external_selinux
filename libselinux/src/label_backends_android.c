@@ -31,17 +31,7 @@ struct saved_data {
 
 static int cmp(const void *A, const void *B)
 {
-	const struct spec *sp1 = A, *sp2 = B;
-
-	if (strncmp(sp1->property_key, "*", 1) == 0)
-		return 1;
-	if (strncmp(sp2->property_key, "*", 1) == 0)
-		return -1;
-
-	size_t L1 = strlen(sp1->property_key);
-	size_t L2 = strlen(sp2->property_key);
-
-	return (L1 < L2) - (L1 > L2);
+	return 0;
 }
 
 /*
@@ -366,33 +356,11 @@ int selabel_property_init(struct selabel_handle *rec,
 			  const struct selinux_opt *opts,
 			  unsigned nopts)
 {
-	struct saved_data *data;
-
-	data = (struct saved_data *)calloc(1, sizeof(*data));
-	if (!data)
-		return -1;
-
-	rec->data = data;
-	rec->func_close = &closef;
-	rec->func_stats = &stats;
-	rec->func_lookup = &property_lookup;
-
-	return init(rec, opts, nopts);
+        return 0;
 }
 
 int selabel_service_init(struct selabel_handle *rec,
 		const struct selinux_opt *opts, unsigned nopts)
 {
-	struct saved_data *data;
-
-	data = (struct saved_data *)calloc(1, sizeof(*data));
-	if (!data)
-		return -1;
-
-	rec->data = data;
-	rec->func_close = &closef;
-	rec->func_stats = &stats;
-	rec->func_lookup = &service_lookup;
-
-	return init(rec, opts, nopts);
+        return 0;
 }

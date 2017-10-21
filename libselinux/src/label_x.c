@@ -235,17 +235,5 @@ static void stats(struct selabel_handle *rec)
 int selabel_x_init(struct selabel_handle *rec, const struct selinux_opt *opts,
 		   unsigned nopts)
 {
-	struct saved_data *data;
-
-	data = (struct saved_data *)malloc(sizeof(*data));
-	if (!data)
-		return -1;
-	memset(data, 0, sizeof(*data));
-
-	rec->data = data;
-	rec->func_close = &close;
-	rec->func_lookup = &lookup;
-	rec->func_stats = &stats;
-
-	return init(rec, opts, nopts);
+        return 0;
 }

@@ -5,15 +5,6 @@
 
 void freeconary(char ** con)
 {
-	char **ptr;
-
-	if (!con)
-		return;
-
-	for (ptr = con; *ptr; ptr++) {
-		free(*ptr);
-	}
-	free(con);
 }
 
 hidden_def(freeconary)

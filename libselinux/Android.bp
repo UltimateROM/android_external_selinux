@@ -1,5 +1,7 @@
 common_LIBRARIES = ["libpcre2"]
 common_CFLAGS = [
+    "-Wno-unused-function",
+    "-Wno-unused-parameter",
     "-DUSE_PCRE2",
 
     // Persistently stored patterns (pcre2) are architecture dependent.
