@@ -1003,5 +1003,20 @@ int selabel_file_init(struct selabel_handle *rec,
 				    const struct selinux_opt *opts,
 				    unsigned nopts)
 {
-        return 0;
+	struct saved_data *data;
+
+	data = (struct saved_data *)malloc(sizeof(*data));
+	if (!data)
+		return -1;
+	memset(data, 0, sizeof(*data));
+
+	rec->data = data;
+	rec->func_close = &closef;
+	rec->func_stats = &stats;
+	rec->func_lookup = &lookup;
+	rec->func_partial_match = &partial_match;
+	rec->func_lookup_best_match = &lookup_best_match;
+	rec->func_cmp = &cmp;
+
+	return init(rec, opts, nopts);
 }

@@ -160,39 +160,190 @@ err1:
 
 hidden void flush_class_cache(void)
 {
+	struct discover_class_node *cur = discover_class_cache, *prev = NULL;
+	size_t i;
+
+	while (cur != NULL) {
+		free(cur->name);
+
+		for (i = 0; i < MAXVECTORS; i++)
+			free(cur->perms[i]);
+
+		free(cur->perms);
+
+		prev = cur;
+		cur = cur->next;
+
+		free(prev);
+	}
+
+	discover_class_cache = NULL;
 }
 
 security_class_t string_to_security_class(const char *s)
 {
-	return 0;
+	struct discover_class_node *node;
+
+	node = get_class_cache_entry_name(s);
+	if (node == NULL) {
+		node = discover_class(s);
+
+		if (node == NULL) {
+			errno = EINVAL;
+			return 0;
+		}
+	}
+
+	return map_class(node->value);
 }
 
 security_class_t mode_to_security_class(mode_t m) {
 
+	if (S_ISREG(m))
+		return string_to_security_class("file");
+	if (S_ISDIR(m))
+		return string_to_security_class("dir");
+	if (S_ISCHR(m))
+		return string_to_security_class("chr_file");
+	if (S_ISBLK(m))
+		return string_to_security_class("blk_file");
+	if (S_ISFIFO(m))
+		return string_to_security_class("fifo_file");
+	if (S_ISLNK(m))
+		return string_to_security_class("lnk_file");
+	if (S_ISSOCK(m))
+		return string_to_security_class("sock_file");
+
+	errno=EINVAL;
 	return 0;
 }
 
 access_vector_t string_to_av_perm(security_class_t tclass, const char *s)
 {
+	struct discover_class_node *node;
+	security_class_t kclass = unmap_class(tclass);
+
+	node = get_class_cache_entry_value(kclass);
+	if (node != NULL) {
+		size_t i;
+		for (i=0; i<MAXVECTORS && node->perms[i] != NULL; i++)
+			if (strcmp(node->perms[i],s) == 0)
+				return map_perm(tclass, 1<<i);
+	}
+
+	errno = EINVAL;
 	return 0;
 }
 
 const char *security_class_to_string(security_class_t tclass)
 {
+	struct discover_class_node *node;
+
+	tclass = unmap_class(tclass);
+
+	node = get_class_cache_entry_value(tclass);
+	if (node == NULL)
 		return NULL;
+	else
+		return node->name;
 }
 
 const char *security_av_perm_to_string(security_class_t tclass,
 				       access_vector_t av)
 {
+	struct discover_class_node *node;
+	size_t i;
+
+	av = unmap_perm(tclass, av);
+	tclass = unmap_class(tclass);
+
+	node = get_class_cache_entry_value(tclass);
+	if (av && node)
+		for (i = 0; i<MAXVECTORS; i++)
+			if ((1<<i) & av)
+				return node->perms[i];
+
 	return NULL;
 }
 
 int security_av_string(security_class_t tclass, access_vector_t av, char **res)
 {
-        return 0;
+	unsigned int i = 0;
+	size_t len = 5;
+	access_vector_t tmp = av;
+	int rc = 0;
+	const char *str;
+	char *ptr;
+
+	/* first pass computes the required length */
+	while (tmp) {
+		if (tmp & 1) {
+			str = security_av_perm_to_string(tclass, av & (1<<i));
+			if (str)
+				len += strlen(str) + 1;
+			else {
+				rc = -1;
+				errno = EINVAL;
+				goto out;
+			}
+		}
+		tmp >>= 1;
+		i++;
+	}
+
+	*res = malloc(len);
+	if (!*res) {
+		rc = -1;
+		goto out;
+	}
+
+	/* second pass constructs the string */
+	i = 0;
+	tmp = av;
+	ptr = *res;
+
+	if (!av) {
+		sprintf(ptr, "null");
+		goto out;
+	}
+
+	ptr += sprintf(ptr, "{ ");
+	while (tmp) {
+		if (tmp & 1)
+			ptr += sprintf(ptr, "%s ", security_av_perm_to_string(
+					       tclass, av & (1<<i)));
+		tmp >>= 1;
+		i++;
+	}
+	sprintf(ptr, "}");
+out:
+	return rc;
 }
 
 void print_access_vector(security_class_t tclass, access_vector_t av)
 {
+	const char *permstr;
+	access_vector_t bit = 1;
+
+	if (av == 0) {
+		printf(" null");
+		return;
+	}
+
+	printf(" {");
+
+	while (av) {
+		if (av & bit) {
+			permstr = security_av_perm_to_string(tclass, bit);
+			if (!permstr)
+				break;
+			printf(" %s", permstr);
+			av &= ~bit;
+		}
+		bit <<= 1;
+	}
+
+	if (av)
+		printf(" 0x%x", av);
+	printf(" }");
 }

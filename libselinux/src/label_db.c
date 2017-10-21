@@ -350,5 +350,10 @@ out_error:
 int selabel_db_init(struct selabel_handle *rec,
 		    const struct selinux_opt *opts, unsigned nopts)
 {
-        return 0;
+	rec->func_close = &db_close;
+	rec->func_lookup = &db_lookup;
+	rec->func_stats = &db_stats;
+	rec->data = db_init(opts, nopts, rec);
+
+	return !rec->data ? -1 : 0;
 }

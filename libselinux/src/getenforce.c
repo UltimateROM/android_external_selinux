@@ -11,7 +11,30 @@
 
 int security_getenforce(void)
 {
-	return 0;
+	int fd, ret, enforce = 0;
+	char path[PATH_MAX];
+	char buf[20];
+
+	if (!selinux_mnt) {
+		errno = ENOENT;
+		return -1;
+	}
+
+	snprintf(path, sizeof path, "%s/enforce", selinux_mnt);
+	fd = open(path, O_RDONLY);
+	if (fd < 0)
+		return -1;
+
+	memset(buf, 0, sizeof buf);
+	ret = read(fd, buf, sizeof buf - 1);
+	close(fd);
+	if (ret < 0)
+		return -1;
+
+	if (sscanf(buf, "%d", &enforce) != 1)
+		return -1;
+
+	return !!enforce;
 }
 
 hidden_def(security_getenforce)

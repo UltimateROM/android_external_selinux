@@ -12,7 +12,34 @@
 
 int security_policyvers(void)
 {
-        return 0;
+	int fd, ret;
+	char path[PATH_MAX];
+	char buf[20];
+	unsigned vers = DEFAULT_POLICY_VERSION;
+
+	if (!selinux_mnt) {
+		errno = ENOENT;
+		return -1;
+	}
+
+	snprintf(path, sizeof path, "%s/policyvers", selinux_mnt);
+	fd = open(path, O_RDONLY);
+	if (fd < 0) {
+		if (errno == ENOENT)
+			return vers;
+		else
+			return -1;
+	}
+	memset(buf, 0, sizeof buf);
+	ret = read(fd, buf, sizeof buf - 1);
+	close(fd);
+	if (ret < 0)
+		return -1;
+
+	if (sscanf(buf, "%u", &vers) != 1)
+		return -1;
+
+	return vers;
 }
 
 hidden_def(security_policyvers)
