@@ -13,6 +13,7 @@
 
 int matchmediacon(const char *media, char ** con)
 {
+#if !defined(__ANDROID__)
 	const char *path = selinux_media_context_path();
 	FILE *infile;
 	char *ptr, *ptr2 = NULL;
@@ -62,6 +63,6 @@ int matchmediacon(const char *media, char ** con)
 		*con = NULL;
 		return -1;
 	}
-
+#endif
 	return 0;
 }

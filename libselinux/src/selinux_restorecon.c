@@ -734,6 +734,7 @@ err:
 int selinux_restorecon(const char *pathname_orig,
 				    unsigned int restorecon_flags)
 {
+#if !defined(__ANDROID__)
 	struct rest_flags flags;
 
 	flags.ignore_digest = (restorecon_flags &
@@ -1033,11 +1034,15 @@ fts_err:
 		    paths[0], strerror(errno));
 	error = -1;
 	goto cleanup;
+#else
+        return 0;
+#endif
 }
 
 /* selinux_restorecon_set_sehandle(3) is called to set the global fc handle */
 void selinux_restorecon_set_sehandle(struct selabel_handle *hndl)
 {
+#if !defined(__ANDROID__)
 	char **specfiles;
 	size_t num_specfiles;
 
@@ -1051,6 +1056,7 @@ void selinux_restorecon_set_sehandle(struct selabel_handle *hndl)
 		fc_digest = NULL;
 		fc_digest_len = 0;
 	}
+#endif
 }
 
 /*
@@ -1059,6 +1065,7 @@ void selinux_restorecon_set_sehandle(struct selabel_handle *hndl)
  */
 struct selabel_handle *selinux_restorecon_default_handle(void)
 {
+#if !defined(__ANDROID__)
 	struct selabel_handle *sehandle;
 
 	struct selinux_opt fc_opts[] = {
@@ -1075,6 +1082,9 @@ struct selabel_handle *selinux_restorecon_default_handle(void)
 	}
 
 	return sehandle;
+#else
+        return NULL;
+#endif
 }
 
 /*
@@ -1083,6 +1093,7 @@ struct selabel_handle *selinux_restorecon_default_handle(void)
  */
 void selinux_restorecon_set_exclude_list(const char **exclude_list)
 {
+#if !defined(__ANDROID__)
 	int i;
 	struct stat sb;
 
@@ -1097,11 +1108,14 @@ void selinux_restorecon_set_exclude_list(const char **exclude_list)
 		    errno == ENOMEM)
 			assert(0);
 	}
+#endif
+
 }
 
 /* selinux_restorecon_set_alt_rootpath(3) sets an alternate rootpath. */
 int selinux_restorecon_set_alt_rootpath(const char *alt_rootpath)
 {
+#if !defined(__ANDROID__)
 	int len;
 
 	/* This should be NULL on first use */
@@ -1119,6 +1133,7 @@ int selinux_restorecon_set_alt_rootpath(const char *alt_rootpath)
 	while (len && (rootpath[len - 1] == '/'))
 		rootpath[--len] = '\0';
 	rootpathlen = len;
+#endif
 
 	return 0;
 }
@@ -1127,6 +1142,8 @@ int selinux_restorecon_set_alt_rootpath(const char *alt_rootpath)
 int selinux_restorecon_xattr(const char *pathname, unsigned int xattr_flags,
 					    struct dir_xattr ***xattr_list)
 {
+#if !defined(__ANDROID__)
+
 	bool recurse = (xattr_flags &
 	    SELINUX_RESTORECON_XATTR_RECURSE) ? true : false;
 	bool delete_nonmatch = (xattr_flags &
@@ -1240,4 +1257,7 @@ cleanup:
 		}
 	}
 	return -1;
+#else
+        return 0;
+#endif
 }
