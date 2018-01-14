@@ -96,7 +96,7 @@ struct selabel_sub *selabel_subs_init(const char *path,
 					    struct selabel_digest *digest)
 {
 	char buf[1024];
-	FILE *cfg = fopen(path, "re");
+	FILE *cfg = fopen(path, "r");
 	struct selabel_sub *sub = NULL;
 	struct stat sb;
 
@@ -191,11 +191,9 @@ static inline struct selabel_digest *selabel_is_digest_set
 	return NULL;
 
 err:
-	if (digest) {
-		free(digest->digest);
-		free(digest->specfile_list);
-		free(digest);
-	}
+	free(digest->digest);
+	free(digest->specfile_list);
+	free(digest);
 	return NULL;
 }
 
